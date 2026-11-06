@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Little Question 💕</title>
+<style>
+  :root {
+    --pink: #ff4d7d;
+    --soft: #ffe3ec;
+    --dark: #5a1030;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(160deg, #ffe3ec, #ffc9dc 60%, #ffb6cf);
+    font-family: "Segoe UI", system-ui, sans-serif;
+    color: var(--dark);
+    text-align: center;
+    overflow-x: hidden;
+  }
+  .wrap { max-width: 440px; margin: 0 auto; padding: 24px 18px 60px; position: relative; z-index: 2; }
+  h1 { font-size: 27px; margin: 14px 0; line-height: 1.25; }
+  h2 { font-size: 22px; margin: 8px 0 14px; }
+  p { font-size: 16px; line-height: 1.5; }
+  .hidden { display: none !important; }
+
+  button {
+    font-family: inherit;
+    font-size: 18px;
+    padding: 13px 28px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    margin: 6px;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  button:active { transform: scale(.95); }
+  .primary { background: var(--pink); color: white; box-shadow: 0 6px 16px rgba(255,77,125,.4); }
+  .ghost { background: white; color: var(--dark); }
+
+  /* Photo carousel */
+  .carousel {
+    position: relative;
+    width: 260px; height: 260px;
+    margin: 10px auto 6px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 6px solid white;
+    box-shadow: 0 10px 30px rgba(90,16,48,.25);
+    background: linear-gradient(135deg, #ff9ab8, #ffd1e0);
+  }
+  .carousel img, .carousel .ph {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+  .carousel .ph { display: flex; align-items: center; justify-content: center; font-size: 90px; }
+  .carousel .on { opacity: 1; }
+
+  /* Question buttons */
+  #yes { font-size: 20px; }
+  #no { background: #e2e2e2; }
+
+  /* Wizard */
+  .progress { height: 8px; background: rgba(255,255,255,.7); border-radius: 8px; overflow: hidden; margin: 6px 0 18px; }
+  .progress div { height: 100%; width: 0; background: var(--pink); transition: width .4s ease; }
+  .opt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+  .opt {
+    background: white;
+    border: 3px solid transparent;
+    border-radius: 18px;
+    padding: 16px 8px;
+    font-size: 17px;
+    cursor: pointer;
+    user-select: none;
+    transition: all .15s ease;
+  }
+  .opt .big { font-size: 34px; display: block; margin-bottom: 4px; }
+  .opt.sel { border-color: var(--pink); background: #fff0f5; transform: scale(1.04); }
+  .field { margin: 16px 0; text-align: left; font-size: 15px; font-weight: 600; }
+  .field input, .field textarea, .field select {
+    width: 100%;
+    font-family: inherit;
+    font-size: 17px;
+    padding: 12px;
+    margin-top: 6px;
+    border-radius: 14px;
+    border: 2px solid #ff9ab8;
+    background: white;
+    color: var(--dark);
+  }
+  .field textarea { resize: none; height: 90px; }
+  .nav { display: flex; justify-content: space-between; margin-top: 18px; }
+  .err { color: #c0153f; font-size: 14px; min-height: 18px; }
+
+  /* Summary */
+  .ticket {
+    background: white;
+    border-radius: 22px;
+    padding: 20px;
+    margin: 16px 0;
+    text-align: left;
+    box-shadow: 0 10px 30px rgba(90,16,48,.18);
+    border-top: 8px solid var(--pink);
+  }
+  .ticket .row { padding: 8px 0; border-bottom: 1px dashed #ffc2d6; font-size: 16px; }
+  .ticket .row:last-child { border: none; }
+  .ticket b { color: var(--pink); }
+  .countdown { display: flex; justify-content: center; gap: 10px; margin: 14px 0; }
+  .countdown div { background: white; border-radius: 14px; padding: 10px 12px; min-width: 66px; box-shadow: 0 4px 12px rgba(90,16,48,.15); }
+  .countdown span { display: block; font-size: 26px; font-weight: 700; color: var(--pink); }
+  .countdown small { font-size: 12px; }
+  #status { min-height: 22px; font-size: 15px; margin-top: 10px; }
+
+  /* Floating hearts background */
+  .bg-heart { position: fixed; bottom: -40px; font-size: 22px; opacity: .6; animation: rise linear forwards; pointer-events: none; z-index: 1; }
+  @keyframes rise { to { transform: translateY(-115vh) rotate(25deg); opacity: 0; } }
+
+  #confetti { position: fixed; inset: 0; pointer-events: none; z-index: 5; }
+  #music { position: fixed; top: 12px; right: 12px; z-index: 9; padding: 8px 12px; font-size: 20px; margin: 0; }
+</style>
+</head>
+<body>
+
+<button id="music" class="ghost hidden" title="Music">🎵</button>
+<canvas id="confetti"></canvas>
+
+<div class="wrap">
+
+  <!-- ========== SCREEN 1: THE QUESTION ========== -->
+  <section id="s1">
+    <div class="carousel" id="carousel1"></div>
+    <h1 id="q">Will you go on a date with me? 💕</h1>
+    <p id="hint">I made this just for you 🌸</p>
+    <div id="btns">
+      <button id="yes" class="primary">Yes 💖</button>
+      <button id="no">No</button>
+    </div>
+  </section>
+
+  <!-- ========== SCREEN 2: PLANNER ========== -->
+  <section id="s2" class="hidden">
+    <h1>Yay!! 🎉💖</h1>
+    <p>Let's plan our perfect date together.</p>
+    <div class="progress"><div id="bar"></div></div>
+
+    <!-- Step 1: activities -->
+    <div class="step" data-step="1">
+      <h2>What would you like to do? ✨</h2>
+      <p>Pick as many as you want.</p>
+      <div class="opt-grid" id="activities">
+        <div class="opt" data-v="Dinner"><span class="big">🍽️</span>Dinner</div>
+        <div class="opt" data-v="A long walk together"><span class="big">🚶‍♀️🚶</span>Long walk</div>
+        <div class="opt" data-v="Flowers"><span class="big">💐</span>Flowers</div>
+        <div class="opt" data-v="Coffee &amp; dessert"><span class="big">🍰</span>Dessert</div>
+        <div class="opt" data-v="A movie"><span class="big">🎬</span>Movie</div>
+        <div class="opt" data-v="Taking photos together"><span class="big">📸</span>Photos</div>
+      </div>
+      <div class="err" id="err1"></div>
+    </div>
+
+    <!-- Step 2: details -->
+    <div class="step hidden" data-step="2">
+      <h2>Tell me your favorites 🌷</h2>
+      <div class="field" id="foodField">
+        What food do you like for dinner?
+        <select id="food">
+          <option>Japanese 🍣</option>
+          <option>Italian 🍝</option>
+          <option>Nepali / Indian 🍛</option>
+          <option>Korean 🍲</option>
+          <option>Ramen 🍜</option>
+          <option>Surprise me 😉</option>
+        </select>
+      </div>
+      <div class="field" id="flowerField">
+        Which flowers do you like?
+        <select id="flower">
+          <option>Roses 🌹</option>
+          <option>Sakura 🌸</option>
+          <option>Sunflowers 🌻</option>
+          <option>Tulips 🌷</option>
+          <option>Lilies 💮</option>
+          <option>Surprise me 😉</option>
+        </select>
+      </div>
+      <div class="field" id="noDetails" class="hidden">
+        <span id="noDetailsText"></span>
+      </div>
+    </div>
+
+    <!-- Step 3: when & where -->
+    <div class="step hidden" data-step="3">
+      <h2>When and where? 📅</h2>
+      <div class="field">
+        Which day do you want to come?
+        <input type="date" id="day">
+      </div>
+      <div class="field">
+        What time?
+        <input type="time" id="time" value="18:00">
+      </div>
+      <div class="field">
+        Meeting place (station, cafe...)
+        <input type="text" id="place" placeholder="e.g. In front of the station">
+      </div>
+      <div class="err" id="err3"></div>
+    </div>
+
+    <!-- Step 4: note -->
+    <div class="step hidden" data-step="4">
+      <h2>One last thing 💌</h2>
+      <div class="field">
+        Write me a little message (optional)
+        <textarea id="note" placeholder="Anything you want to tell me..."></textarea>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button id="back" class="ghost">← Back</button>
+      <button id="next" class="primary">Next →</button>
+    </div>
+  </section>
+
+  <!-- ========== SCREEN 3: SUMMARY ========== -->
+  <section id="s3" class="hidden">
+    <div class="carousel" id="carousel2"></div>
+    <h1>It's a date! 💖</h1>
+    <p>Counting down to us:</p>
+    <div class="countdown" id="countdown">
+      <div><span id="cd-d">0</span><small>days</small></div>
+      <div><span id="cd-h">0</span><small>hours</small></div>
+      <div><span id="cd-m">0</span><small>min</small></div>
+      <div><span id="cd-s">0</span><small>sec</small></div>
+    </div>
+
+    <div class="ticket" id="ticket"></div>
+
+    <button id="send" class="primary">Send my answer 💌</button>
+    <button id="wa" class="primary hidden">WhatsApp 💬</button>
+    <button id="cal" class="ghost">Add to calendar 📅</button>
+    <button id="copy" class="ghost">Copy 📋</button>
+    <div id="status"></div>
+  </section>
+
+</div>
+
+<script>
+// =====================  EDIT THESE  =====================
+const MY_NAME     = "Khatarist";
+const HER_NAME    = "";                 // her name, e.g. "Sakura" (optional)
+const MY_WHATSAPP = "";                 // e.g. "819012345678" (country code, no + or spaces)
+const PHOTOS      = ["photo1.jpg", "photo2.jpg", "photo3.jpg"]; // put your pictures next to this file
+const MUSIC       = "";                 // e.g. "music.mp3" (put the file next to this one)
+// ========================================================
+
+const $ = (id) => document.getElementById(id);
+const s1 = $("s1"), s2 = $("s2"), s3 = $("s3");
+
+/* ---------- Floating hearts in the background ---------- */
+setInterval(() => {
+  const h = document.createElement("div");
+  h.className = "bg-heart";
+  h.textContent = ["💖","💕","🌸","💗","✨"][Math.floor(Math.random()*5)];
+  h.style.left = Math.random()*100 + "vw";
+  h.style.fontSize = 16 + Math.random()*22 + "px";
+  h.style.animationDuration = 6 + Math.random()*6 + "s";
+  document.body.appendChild(h);
+  setTimeout(() => h.remove(), 12500);
+}, 700);
+
+/* ---------- Photo carousel (falls back to emoji if no photo) ---------- */
+function buildCarousel(el) {
+  const items = [];
+  PHOTOS.forEach((src) => {
+    const img = new Image();
+    img.src = src;
+    img.onload  = () => { img.dataset.ok = "1"; };
+    img.onerror = () => { img.remove(); };
+    el.appendChild(img);
+    items.push(img);
+  });
+  const ph = document.createElement("div");
+  ph.className = "ph on";
+  ph.textContent = "💝";
+  el.appendChild(ph);
+
+  let i = 0;
+  setInterval(() => {
+    const ok = [...el.querySelectorAll("img")].filter(im => im.dataset.ok === "1");
+    if (ok.length === 0) return;
+    ph.classList.remove("on");
+    el.querySelectorAll("img").forEach(im => im.classList.remove("on"));
+    i = (i + 1) % ok.length;
+    ok[i].classList.add("on");
+  }, 2500);
+  // show first loaded photo quickly
+  setTimeout(() => {
+    const ok = [...el.querySelectorAll("img")].filter(im => im.dataset.ok === "1");
+    if (ok.length) { ph.classList.remove("on"); ok[0].classList.add("on"); }
+  }, 600);
+}
+buildCarousel($("carousel1"));
+buildCarousel($("carousel2"));
+
+/* ---------- Music ---------- */
+let audio = null, playing = false;
+if (MUSIC) {
+  $("music").classList.remove("hidden");
+  audio = new Audio(MUSIC);
+  audio.loop = true;
+  $("music").addEventListener("click", () => {
+    if (playing) { audio.pause(); $("music").textContent = "🔇"; }
+    else { audio.play().catch(()=>{}); $("music").textContent = "🎵"; }
+    playing = !playing;
+  });
+}
+function startMusic() {
+  if (audio && !playing) { audio.play().then(()=>{ playing = true; }).catch(()=>{}); }
+}
+
+/* ---------- Screen 1: the question (No shrinks, Yes grows) ---------- */
+const noTexts = [
+  "Are you sure? 🥺", "Really sure?", "Think again 💭", "Pretty please? 🙏",
+  "Don't do this to me 😭", "I'll be very sad...", "Last chance! 💔", "OK now just say Yes 😤"
+];
+let noCount = 0;
+function pressNo() {
+  noCount++;
+  const yes = $("yes"), no = $("no");
+  yes.style.fontSize = (20 + noCount * 5) + "px";
+  yes.style.padding = (13 + noCount * 3) + "px " + (28 + noCount * 6) + "px";
+  no.textContent = noTexts[Math.min(noCount - 1, noTexts.length - 1)];
+  no.style.fontSize = Math.max(11, 18 - noCount) + "px";
+  $("hint").textContent = ["🥺","😢","😭","💔"][Math.min(Math.floor(noCount/2),3)];
+  if (noCount >= 9) no.classList.add("hidden");
+}
+$("no").addEventListener("click", pressNo);
+
+$("yes").addEventListener("click", () => {
+  startMusic();
+  s1.classList.add("hidden");
+  s2.classList.remove("hidden");
+  burst();
+  window.scrollTo(0, 0);
+});
+
+/* ---------- Screen 2: planner wizard ---------- */
+let step = 1;
+const TOTAL = 4;
+const chosen = new Set();
+
+document.querySelectorAll("#activities .opt").forEach((o) => {
+  o.addEventListener("click", () => {
+    const v = o.dataset.v;
+    if (chosen.has(v)) { chosen.delete(v); o.classList.remove("sel"); }
+    else { chosen.add(v); o.classList.add("sel"); }
+    $("err1").textContent = "";
+  });
+});
+
+function showStep() {
+  document.querySelectorAll(".step").forEach(s =>
+    s.classList.toggle("hidden", Number(s.dataset.step) !== step));
+  $("bar").style.width = (step / TOTAL * 100) + "%";
+  $("back").style.visibility = step === 1 ? "hidden" : "visible";
+  $("next").textContent = step === TOTAL ? "Finish 💖" : "Next →";
+
+  if (step === 2) {
+    const hasDinner = chosen.has("Dinner");
+    const hasFlowers = chosen.has("Flowers");
+    $("foodField").classList.toggle("hidden", !hasDinner);
+    $("flowerField").classList.toggle("hidden", !hasFlowers);
+    const none = !hasDinner && !hasFlowers;
+    $("noDetails").classList.toggle("hidden", !none);
+    $("noDetailsText").textContent = none ? "Nothing to choose here, it'll be perfect anyway 😊 Tap Next." : "";
+  }
+  window.scrollTo(0, 0);
+}
+
+$("back").addEventListener("click", () => { if (step > 1) { step--; showStep(); } });
+$("next").addEventListener("click", () => {
+  if (step === 1 && chosen.size === 0) { $("err1").textContent = "Pick at least one 💗"; return; }
+  if (step === 3) {
+    if (!$("day").value) { $("err3").textContent = "Please choose a day 💗"; return; }
+    const t = new Date($("day").value + "T00:00:00");
+    const today = new Date(); today.setHours(0,0,0,0);
+    if (t < today) { $("err3").textContent = "That day has already passed 😅"; return; }
+    $("err3").textContent = "";
+  }
+  if (step < TOTAL) { step++; showStep(); }
+  else finish();
+});
+$("day").min = new Date().toISOString().split("T")[0];
+showStep();
+
+/* ---------- Data & message ---------- */
+function getData() {
+  return {
+    activities: [...chosen],
+    food: chosen.has("Dinner") ? $("food").value : "",
+    flower: chosen.has("Flowers") ? $("flower").value : "",
+    day: $("day").value,
+    time: $("time").value,
+    place: $("place").value.trim(),
+    note: $("note").value.trim()
+  };
+}
+function prettyDay(d) {
+  return new Date(d + "T00:00:00").toLocaleDateString("en-US",
+    { weekday: "long", month: "long", day: "numeric" });
+}
+function buildMessage() {
+  const d = getData();
+  let m = (HER_NAME ? HER_NAME : "She") + " said YES! 💖\n\n";
+  m += "✨ Plan: " + d.activities.join(", ") + "\n";
+  if (d.food)   m += "🍽️ Food: " + d.food + "\n";
+  if (d.flower) m += "💐 Flowers: " + d.flower + "\n";
+  m += "📅 Day: " + prettyDay(d.day) + "\n";
+  m += "⏰ Time: " + d.time + "\n";
+  if (d.place)  m += "📍 Place: " + d.place + "\n";
+  if (d.note)   m += "\n💌 \"" + d.note + "\"\n";
+  m += "\n- sent from our little date page 😊";
+  return m;
+}
+
+/* ---------- Screen 3: summary ---------- */
+let timer = null;
+function finish() {
+  const d = getData();
+  s2.classList.add("hidden");
+  s3.classList.remove("hidden");
+  window.scrollTo(0, 0);
+  burst(); setTimeout(burst, 900);
+
+  let rows = "";
+  rows += '<div class="row">✨ <b>Plan:</b> ' + d.activities.join(", ") + "</div>";
+  if (d.food)   rows += '<div class="row">🍽️ <b>Food:</b> ' + d.food + "</div>";
+  if (d.flower) rows += '<div class="row">💐 <b>Flowers:</b> ' + d.flower + "</div>";
+  rows += '<div class="row">📅 <b>Day:</b> ' + prettyDay(d.day) + "</div>";
+  rows += '<div class="row">⏰ <b>Time:</b> ' + d.time + "</div>";
+  if (d.place) rows += '<div class="row">📍 <b>Place:</b> ' + escapeHtml(d.place) + "</div>";
+  if (d.note)  rows += '<div class="row">💌 <b>Message:</b> ' + escapeHtml(d.note) + "</div>";
+  $("ticket").innerHTML = rows;
+
+  if (MY_WHATSAPP) $("wa").classList.remove("hidden");
+
+  const target = new Date(d.day + "T" + d.time + ":00");
+  function tick() {
+    let diff = Math.max(0, target - new Date());
+    $("cd-d").textContent = Math.floor(diff / 864e5);
+    $("cd-h").textContent = Math.floor(diff % 864e5 / 36e5);
+    $("cd-m").textContent = Math.floor(diff % 36e5 / 6e4);
+    $("cd-s").textContent = Math.floor(diff % 6e4 / 1e3);
+  }
+  tick();
+  clearInterval(timer);
+  timer = setInterval(tick, 1000);
+}
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+/* ---------- Send / share / copy / calendar ---------- */
+$("send").addEventListener("click", async () => {
+  const msg = buildMessage();
+  if (MY_WHATSAPP) {
+    window.open("https://wa.me/" + MY_WHATSAPP + "?text=" + encodeURIComponent(msg), "_blank");
+    return;
+  }
+  if (navigator.share) {
+    try { await navigator.share({ text: msg }); $("status").textContent = "Sent! 💌"; }
+    catch (e) { $("status").textContent = "Cancelled."; }
+  } else {
+    await copyText(msg);
+  }
+});
+$("wa").addEventListener("click", () => {
+  window.open("https://wa.me/" + MY_WHATSAPP + "?text=" + encodeURIComponent(buildMessage()), "_blank");
+});
+$("copy").addEventListener("click", () => copyText(buildMessage()));
+
+async function copyText(t) {
+  try {
+    await navigator.clipboard.writeText(t);
+    $("status").textContent = "Copied! Paste it in a message to me 💌";
+  } catch (e) {
+    $("status").textContent = "Couldn't copy. Please screenshot this page 📸";
+  }
+}
+
+$("cal").addEventListener("click", () => {
+  const d = getData();
+  const start = d.day.replace(/-/g, "") + "T" + d.time.replace(":", "") + "00";
+  const endDate = new Date(d.day + "T" + d.time + ":00");
+  endDate.setHours(endDate.getHours() + 2);
+  const pad = (n) => String(n).padStart(2, "0");
+  const end = endDate.getFullYear() + pad(endDate.getMonth()+1) + pad(endDate.getDate()) +
+              "T" + pad(endDate.getHours()) + pad(endDate.getMinutes()) + "00";
+  const ics = [
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Our Date//EN", "BEGIN:VEVENT",
+    "UID:" + Date.now() + "@ourdate",
+    "DTSTAMP:" + new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z",
+    "DTSTART:" + start, "DTEND:" + end,
+    "SUMMARY:Our date 💖",
+    "LOCATION:" + (d.place || ""),
+    "DESCRIPTION:" + d.activities.join(", "),
+    "END:VEVENT", "END:VCALENDAR"
+  ].join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+  a.download = "our-date.ics";
+  a.click();
+  $("status").textContent = "Calendar file downloaded 📅";
+});
+
+/* ---------- Confetti ---------- */
+const cv = $("confetti"), ctx = cv.getContext("2d");
+let parts = [], running = false;
+function resize() { cv.width = innerWidth; cv.height = innerHeight; }
+resize(); addEventListener("resize", resize);
+function burst() {
+  const colors = ["#ff4d7d","#ffb6cf","#fff","#ffd166","#ff8fab","#c77dff"];
+  for (let i = 0; i < 120; i++) {
+    parts.push({
+      x: innerWidth / 2, y: innerHeight / 3,
+      vx: (Math.random() - .5) * 14, vy: Math.random() * -12 - 2,
+      s: 5 + Math.random() * 6, c: colors[Math.floor(Math.random()*colors.length)],
+      r: Math.random() * 6, vr: (Math.random() - .5) * .4, life: 140
+    });
+  }
+  if (!running) { running = true; loop(); }
+}
+function loop() {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  parts.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += .28; p.r += p.vr; p.life--;
+    ctx.save();
+    ctx.translate(p.x, p.y); ctx.rotate(p.r);
+    ctx.globalAlpha = Math.max(0, p.life / 140);
+    ctx.fillStyle = p.c;
+    ctx.fillRect(-p.s/2, -p.s/2, p.s, p.s * .6);
+    ctx.restore();
+  });
+  parts = parts.filter(p => p.life > 0);
+  if (parts.length) requestAnimationFrame(loop);
+  else { running = false; ctx.clearRect(0, 0, cv.width, cv.height); }
+}
+</script>
+</body>
+</html>
